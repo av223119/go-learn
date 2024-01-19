@@ -151,7 +151,9 @@ x := map[string][]string{}  // map string to slice of strings
 
 can't use == !=; maps.Equal(a, b)
 
-can't use &m["key"] nor m["key"].field !
+## Maps magic
+
+can't use &m["key"] nor m["key"].field! See also structs and pointers magic.
 
 
 # Structs
@@ -161,8 +163,12 @@ type mydata struct {
     field1 int
     field2 string
 }
-v1 := mydata{
-    field1: 1
+v1 := mydata{   // explicit field names, recommended
+    field1: 1,
+}
+v2 := mydata{   // implicit field names
+    1,
+    "test"
 }
 ```
 Structs could be anynomous
@@ -174,6 +180,20 @@ var v1 struct {
 v1 := struct { f1 int } { f1: 2 }
 ```
 Structs don't go along nicely with maps, can't use m[key].field; better use `map[int]*mystruct{}`
+
+Struct pointers are "magically" dereferenced when accessing fields:
+```go
+type st struct {
+    field1 int
+    field2 string
+}
+p := &st{1, "one"}
+p.field1 = 2            // OK, *p = {2, "one"}
+
+m := map[int]*st        // map int to pointer to struct
+m[1] = &st{3, "three"}  // here it insists it's a pointer
+res := m[1].field1 == 3 // OK, res = true
+```
 
 # If-then-else
 
@@ -204,6 +224,8 @@ for k, v := range mymap { .. }
 for _, v := range mymap { .. }  // only values
 for k := range mymap { .. }     // only keys
 ```
+Range loop creates a copy; if you need to change the elements, use `for i := range slice { slice[i] = .. }`
+
 loops can be labeled: loopname: ..
 `break`, `continue` by default affect the innermost, but can use loop name
 
@@ -273,6 +295,12 @@ p := &stringvar     // pointer to a string variable stringvar
 p := new(string)    // pointer to a string
 ```
 `&` operator can't be applied to a basic type, no `&5` or `&"test"`!
+
+`&` of a slice or map element is risky; changing map/slice might rearrange elements in memory, and the pointer will point to a stale data.
+
+## Pointers magic
+
+pointer to a struct is automatically dereferenced, see [structs](#structs)
 
 
 # Methods
