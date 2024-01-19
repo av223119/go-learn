@@ -8,6 +8,10 @@
 - [Maps](#maps)
 - [Structs](#structs)
 - [If-then-else](#if-then-else)
+- [For cycle](#for-cycle)
+- [Switch](#switch)
+- [Functions](#functions)
+- [Pointers](#pointers)
 
 # Basic types
 
@@ -181,3 +185,101 @@ if condition {
 // var declaration is possible in condition; var is scoped to block only
 if a := rand.Intn(10); a > 5 { }
 ```
+
+# For cycle
+```go
+for i := 0; i < 10; i++ { .. }               // can omit any part, but still needs `;`
+for i < 100 { .. }                           // like while
+for { .. }                                   // infinite loop
+for i, v := range []string{"a", "b" } { .. } // [0 "a"], [1 "b"]
+```
+Range-loop on string iterates over *runes* and i is the *byte* offset!
+```go
+for i, v := range "🎁x" { .. }               // [0 127873], [4 120]
+```
+
+Range-loop on maps iterates over KVPs. Order is not guaranteed.
+```go
+for k, v := range mymap { .. }
+for _, v := range mymap { .. }  // only values
+for k := range mymap { .. }     // only keys
+```
+loops can be labeled: loopname: ..
+`break`, `continue` by default affect the innermost, but can use loop name
+
+
+# Switch
+
+Can have two forms, with expression and without. Switch-local var is possible, like with `if`
+```go
+// with an expression
+switch size:=len(word); size {
+    case 1, 2: ..
+    case 3:
+    default: ..
+}
+
+// bare, can have arbitrary conditions
+switch size:=len(word); {
+    case size < 5: ..
+}
+```
+no fall-through, unless `fallthrough` is the last command in block. `break` breaks from case
+
+# Functions
+
+variables are passed by value, unless pointers (map, slice)
+```go
+func fname1 (param1 int, param2 str) int { .. }
+func fname2 (param1, param2 int) int { .. }      // both params int
+func fname3 (param1 ...int) int { .. }           // variadic param
+x := fname3(1, 2, 3, 4)                          // variadic param call
+x := fname3(slice1...)                           // variadic param call with a slice: three dots needed
+func fname4(param1 int) (int, int) { .. }        // returns 2 int values
+```
+Function can have named return vars: they are function-scoped (and seen by
+defer) and bare return returns them
+```go
+func fname5 () (res int, err error) {
+    res = rand.Intn(10)
+    return
+}
+```
+Functions are first-class, can have anonymous functions, function types and closures
+```go
+type ftype1 func(int)int   // int → int function type
+f := func(int i) int {     // variable f of the same type
+    return i+1
+}
+```
+Special keyword: `defer <callable>`. Defers action till the end of the
+function, but parameters are evaluated immediately. Defer can access named
+return params, if any.
+```go
+func f() int {
+    a := 1
+    defer fmt.Println(a)   // executed in reverse order: 2nd
+    defer func() {         // 1st
+        ...
+    }
+}
+```
+
+# Pointers
+```go
+var p *string       // pointer to a string
+p := &stringvar     // pointer to a string variable stringvar
+*p == stringvar     // true
+p := new(string)    // pointer to a string
+```
+`&` operator can't be applied to a basic type, no `&5` or `&"test"`!
+
+
+# Methods
+
+Can only be declared on package level, and should be in the same package as the type
+```go
+type Person struct { .. }
+func (p Person) to_string() string { .. }
+```
+Pointer-methods vs value-methods: appear to convert automatically, but value-methods have a copy of the value
