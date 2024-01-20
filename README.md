@@ -61,6 +61,34 @@ Only basic types are allowed. No constant structs, maps, slices etc. Otherwise s
 const pi = 3.1415
 ```
 
+Constants and `iota` could be used to imitate enums:
+```go
+const (
+    Spades = iota
+    Clubs
+    Diamonds
+    Hearts
+)
+fmt.Println(Spades, Clubs, Diamonds, Hearts)     // 0 1 2 3
+```
+If `iota` is used in constant definition, the next constant uses the same
+definition with iota++, unless specified otherwise. Since it starts with 0, to
+prevent "first value vs uninitialized value" problem, it's recommended to
+either use `iota+1` or skip the first value:
+```go
+const (
+    READ = iota + 1
+    WRITE
+    EXECUTE
+)
+// or
+const (
+    _
+    READ = iota
+    WRITE
+    EXECUTE
+)
+```
 
 # Arrays
 
