@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 )
@@ -36,7 +37,8 @@ func print_stats(x fdata) {
 	fmt.Printf(" %-s\n", x.fname)
 }
 
-func process_file(f *os.File, fname string) (fdata, error) {
+// *os.File implements io.Reader
+func process_file(f io.Reader, fname string) (fdata, error) {
 	data := fdata{fname: fname}
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
@@ -53,8 +55,8 @@ func process_file(f *os.File, fname string) (fdata, error) {
 }
 
 func main() {
-	flag.BoolVar(&want_lines, "l", false, "Line stats")
-	flag.BoolVar(&want_words, "w", false, "Word stats")
+	flag.BoolVar(&want_lines, "l", false, "Line count")
+	flag.BoolVar(&want_words, "w", false, "Word count")
 	flag.BoolVar(&want_bytes, "c", false, "Byte count")
 	flag.Parse()
 
