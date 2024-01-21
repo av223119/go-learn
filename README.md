@@ -12,6 +12,8 @@
 - [Switch](#switch)
 - [Functions](#functions)
 - [Pointers](#pointers)
+- [Methods](#methods)
+- [Interfaces](#interfaces)
 
 # Basic types
 
@@ -56,7 +58,9 @@ x := byte(10)             // explicite type
 
 # Constants
 
-Only basic types are allowed. No constant structs, maps, slices etc. Otherwise similar to var
+Only basic types are allowed. No constant structs, maps, slices etc. Otherwise
+similar to var
+
 ```go
 const pi = 3.1415
 ```
@@ -116,7 +120,9 @@ can't use == !=; slices.Equal(a, b)
 
 `append(slice, item1 [, item2 ..])` or `append(slice, slice2..)` is not in-place
 
-`=` or `[:]` don't copy, but use the same var. `[::]` is like `[:]`, but limits capacity. Absurd overlapping example:
+`=` or `[:]` don't copy, but use the same var. `[::]` is like `[:]`, but limits
+capacity. Absurd overlapping example:
+
 ```go
 x := make([]string, 0, 5)
 x = append(x, "a", "b", "c", "d") // capacity 5
@@ -139,7 +145,8 @@ copy(dest, src) // copies up to LENGTH, returns copied length. Only slices, not 
 
 ```go
 slice1 = array1[:]
-array2 := [size]int(slice1)  // can't use [...] or [len(slice)], fixed length ≤ slice_size needed
+array2 := [size]int(slice1)  // can't use [...] or [len(slice)]
+                             // fixed length ≤ slice_size needed
 ```
 
 # Strings
@@ -207,7 +214,10 @@ var v1 struct {
 // or
 v1 := struct { f1 int } { f1: 2 }
 ```
-Structs don't go along nicely with maps, can't use m[key].field; better use `map[int]*mystruct{}`
+Structs don't go along nicely with maps, can't use m[key].field; better use
+`map[int]*mystruct{}`
+
+## Structs magic
 
 Struct pointers are "magically" dereferenced when accessing fields:
 ```go
@@ -222,6 +232,24 @@ m := map[int]*st        // map int to pointer to struct
 m[1] = &st{3, "three"}  // here it insists it's a pointer
 res := m[1].field1 == 3 // OK, res = true
 ```
+
+## Struct embedding/composition
+Struct can contain unnamed field of other type; in this case the fields of
+the embedded struct could be accessed directly (but not in construction),
+and methods are promoted to struct's methods:
+```go
+type Point struct {
+    X int
+    Y int
+}
+type Circle struct {
+    Point
+    R int
+}
+c1 := Circle{Point: Point{3,4}, R: 2}  // can't use Circle{X: 3, Y:4, R:2}
+c1.X == 3                              // true; here can access .X and .Y
+```
+In case of of name overlap, "inner" fields need full specification: `c1.Point.X`
 
 # If-then-else
 
@@ -252,7 +280,8 @@ for k, v := range mymap { .. }
 for _, v := range mymap { .. }  // only values
 for k := range mymap { .. }     // only keys
 ```
-Range loop creates a copy; if you need to change the elements, use `for i := range slice { slice[i] = .. }`
+Range loop creates a copy; if you need to change the elements, use
+`for i := range slice { slice[i] = .. }`
 
 loops can be labeled: loopname: ..
 `break`, `continue` by default affect the innermost, but can use loop name
@@ -260,7 +289,9 @@ loops can be labeled: loopname: ..
 
 # Switch
 
-Can have two forms, with expression and without. Switch-local var is possible, like with `if`
+Can have two forms, with expression and without. Switch-local var is possible,
+like with `if`
+
 ```go
 // with an expression
 switch size:=len(word); size {
@@ -274,7 +305,8 @@ switch size:=len(word); {
     case size < 5: ..
 }
 ```
-no fall-through, unless `fallthrough` is the last command in block. `break` breaks from case
+no fall-through, unless `fallthrough` is the last command in block. `break`
+breaks from case
 
 # Functions
 
@@ -295,7 +327,9 @@ func fname5 () (res int, err error) {
     return
 }
 ```
-Functions are first-class, can have anonymous functions, function types and closures
+Functions are first-class, can have anonymous functions, function types and
+closures
+
 ```go
 type ftype1 func(int)int   // int → int function type
 f := func(int i) int {     // variable f of the same type
@@ -305,6 +339,7 @@ f := func(int i) int {     // variable f of the same type
 Special keyword: `defer <callable>`. Defers action till the end of the
 function, but parameters are evaluated immediately. Defer can access named
 return params, if any.
+
 ```go
 func f() int {
     a := 1
@@ -324,7 +359,8 @@ p := new(string)    // pointer to a string
 ```
 `&` operator can't be applied to a basic type, no `&5` or `&"test"`!
 
-`&` of a slice or map element is risky; changing map/slice might rearrange elements in memory, and the pointer will point to a stale data.
+`&` of a slice or map element is risky; changing map/slice might rearrange
+elements in memory, and the pointer will point to a stale data.
 
 ## Pointers magic
 
@@ -333,9 +369,23 @@ pointer to a struct is automatically dereferenced, see [structs](#structs)
 
 # Methods
 
-Can only be declared on package level, and should be in the same package as the type
+Can only be declared on package level, and should be in the same package as the
+type
 ```go
 type Person struct { .. }
 func (p Person) to_string() string { .. }
 ```
-Pointer-methods vs value-methods: appear to convert automatically, but value-methods have a copy of the value
+Pointer-methods vs value-methods: appear to convert automatically, but
+value-methods have a copy of the value
+
+
+# Interfaces
+
+Interfaces enforce methods on types. Type doesn't explicitely state it
+implements interface, compiler does the check
+
+```go
+type Stringer interface {
+    String() string         // to be a stringer, a type must have a method String()→string
+}
+```
