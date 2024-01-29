@@ -118,15 +118,16 @@ func search(dir string, terms []string) {
 		}
 		x := xkcd{}
 		err = json.Unmarshal(blob, &x)
-		ss := strings.ToLower(strings.Join([]string{x.Title, x.Safe_title, x.Transcript, x.Alt}, "\n"))
+		ss := strings.ToLower(
+			strings.Join([]string{x.Title, x.Safe_title, x.Transcript, x.Alt}, "\n"),
+		)
 		if allterms(ss, terms) {
 			logger.Printf("Found match: %d", x.Num)
 		}
 		return nil
 	}
 
-	err := filepath.WalkDir(dir, fn)
-	if err != nil {
+	if err := filepath.WalkDir(dir, fn); err != nil {
 		logger.Printf("Error %s", err)
 	}
 }
