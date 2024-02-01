@@ -251,6 +251,8 @@ c1.X == 3                              // true; here can access .X and .Y
 ```
 In case of of name overlap, "inner" fields need full specification: `c1.Point.X`
 
+See also [interfaces](#interfaces).
+
 # If-then-else
 
 ```go
@@ -388,4 +390,84 @@ implements interface, compiler does the check
 type Stringer interface {
     String() string         // to be a stringer, a type must have a method String()→string
 }
+```
+
+Interfaces work with struct composition:
+
+```go
+type Point struct {
+    X float64
+    Y float64
+}
+type Circle struct {
+    Point
+    R float64
+}
+func distance (p Point) float64 {
+   return math.Hypot(p.X, p.Y)
+}
+var p1 = Point{1,2}
+var c1 = Circle{Point{1,2},3}
+distance(p1)       // OK
+distance(c1.Point) // OK
+distance(c1)       // Error: cannot use Circle as Point value
+                   // However
+func (p Point) distance2() float64 {
+   return math.Hypot(p.X, p.Y)
+}
+p1.distance2()     // OK
+c1.distance2()     // OK, distance got promoted from Point
+                   // Explicit interface allows assignment
+type Distancer2 interface {
+    distance2() float64
+}
+var x1 Distancer2
+x1 = p1            // OK
+x1 = c1            // OK
+```
+
+To sort, a container should satisfy `sort.Intrface`: `Len()`, `Swap(i, j)`, `Less(i, j)`
+So to sort points we have to define these; but if we want different criteria? Composition:
+
+```go
+type Points []Point
+func (p Points) Len() int {
+    return len(s)
+}
+func (p Points) Swap (i, j int) {
+    p[i], p[j] = p[j], p[i]
+}
+func (p Points) Less (i, j int) bool {
+    return p[i].distance() < p[j].distance()
+}
+
+// ByX is a type; all Points methods promoted
+type ByX struct {Points}
+func (p ByX) Less(i, j int) bool {
+    return p.Points[i].X < p.Points[j].X
+}
+
+x := Points{{1,3}, {2, 2}, {0, 3}}
+sort.Sort(x)         // x = [{2 2} {0 3} {1 3}]
+sort.Sort(ByX{x})    // x = [{0 3} {1 3} {2 2}]
+```
+
+struct trick works with interfaces: `sort.Reverse`
+```go
+// embeds anything implementing sort.Interface
+type reverse struct { Interface }
+
+// opposite of a normal Less provided by Interface
+func (r reverse) Less (i, j int) bool {
+    return r.Interface.Less(j, i)
+}
+
+// above is sufficient with a type cast
+sort.Sort(reverse{x})
+
+// but for function interface we need a function
+func Reverse (data Interface) Interface {
+    return &reverse{data}
+}
+sort.Sort(sort.Reverse(x))
 ```
