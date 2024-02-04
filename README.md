@@ -471,3 +471,21 @@ func Reverse (data Interface) Interface {
 }
 sort.Sort(sort.Reverse(x))
 ```
+
+`any` is an alias of `interface{}`, that is, something that might have some
+methods, that is, anything.
+
+type can be asserted and checked:
+```go
+var i any = 20
+i.(string)           // panic: interface {} is int, not string
+s, ok := i.(string)  // "", false
+x, ok := i.(int)     // 20, true
+
+// var j is strongly typed inside the switch
+switch j := i(type) {
+case nil:            // nil, j is any
+case int:            // int, j is int
+case string:         // string, j is string
+}
+```
