@@ -118,7 +118,8 @@ Uninitialized slices are nil!
 
 can't use == !=; slices.Equal(a, b)
 
-`append(slice, item1 [, item2 ..])` or `append(slice, slice2..)` is not in-place
+`append(slice, item1 [, item2 ..])` or `append(slice, slice2..)` is not
+in-place
 
 `=` or `[:]` don't copy, but use the same var. `[::]` is like `[:]`, but limits
 capacity. Absurd overlapping example:
@@ -318,7 +319,8 @@ func fname1 (param1 int, param2 str) int { .. }
 func fname2 (param1, param2 int) int { .. }      // both params int
 func fname3 (param1 ...int) int { .. }           // variadic param
 x := fname3(1, 2, 3, 4)                          // variadic param call
-x := fname3(slice1...)                           // variadic param call with a slice: three dots needed
+x := fname3(slice1...)                           // variadic param call with a slice:
+                                                 // three dots needed
 func fname4(param1 int) (int, int) { .. }        // returns 2 int values
 ```
 Function can have named return vars: they are function-scoped (and seen by
@@ -338,6 +340,21 @@ f := func(int i) int {     // variable f of the same type
     return i+1
 }
 ```
+
+Currying is possible in the following way:
+```go
+func Add(x, y int) int {
+    return x + y
+}
+
+func AddTo(x int) func(int) int {   // returns a function
+    return func(y int) int {        // one param
+        return Add(x, y)            // in in the closure
+    }
+}
+```
+Currying a *method* makes a closure under the hood
+
 Special keyword: `defer <callable>`. Defers action till the end of the
 function, but parameters are evaluated immediately. Defer can access named
 return params, if any.
@@ -368,6 +385,11 @@ elements in memory, and the pointer will point to a stale data.
 
 pointer to a struct is automatically dereferenced, see [structs](#structs)
 
+Also for pointer- and value-receiving functions, Go applies `*` and `&`
+automatically. But for the pointer receiver, the value couldn't be a r-value:
+```go
+Point{1,2}.PointerRecieverMethod(arg) // ERROR
+```
 
 # Methods
 
@@ -388,7 +410,8 @@ implements interface, compiler does the check
 
 ```go
 type Stringer interface {
-    String() string         // to be a stringer, a type must have a method String()→string
+    String() string         // to be a stringer, a type must have a
+                            // method String() string
 }
 ```
 
@@ -426,8 +449,9 @@ x1 = p1            // OK
 x1 = c1            // OK
 ```
 
-To sort, a container should satisfy `sort.Intrface`: `Len()`, `Swap(i, j)`, `Less(i, j)`
-So to sort points we have to define these; but if we want different criteria? Composition:
+To sort, a container should satisfy `sort.Intrface`: `Len()`, `Swap(i, j)`,
+`Less(i, j)`. So to sort points we have to define these; but if we want
+different criteria? Composition:
 
 ```go
 type Points []Point
@@ -487,5 +511,25 @@ switch j := i(type) {
 case nil:            // nil, j is any
 case int:            // int, j is int
 case string:         // string, j is string
+}
+```
+
+How to make any function of given signature satisfy the interface? Example from
+http module:
+
+```go
+// Handler interface
+type Handler interface {
+    ServeHTTP(ResponseWriter, *Request)
+}
+
+// Handler-like function (of any name)
+type HandlerFunc func(ResponseWriter, *Request)
+
+// Method authomatically available on any handler-like function, which creates
+// an "alias" for the function by creating a methid simply calling named function.
+// Thus any handler-like function will satisfy Handler interface
+func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) {
+    f(w, r)
 }
 ```
