@@ -183,7 +183,7 @@ x := map[string][]string{}  // map string to slice of strings
 
 `clear(map)` clear entire map, length=0 (unlike slices)
 
-`val, ok = map[key]` ok contains bool (key is in the map or not)
+`val, ok = map[key]` OK-idiom: ok contains bool (key is in the map or not)
 
 can't use == !=; maps.Equal(a, b)
 
@@ -283,6 +283,12 @@ for k, v := range mymap { .. }
 for _, v := range mymap { .. }  // only values
 for k := range mymap { .. }     // only keys
 ```
+
+Range-loop in a channel iterates over data received from it
+```go
+for v := range channel { .. }
+```
+
 Range loop creates a copy; if you need to change the elements, use
 `for i := range slice { slice[i] = .. }`
 
@@ -503,8 +509,8 @@ type can be asserted and checked:
 ```go
 var i any = 20
 i.(string)           // panic: interface {} is int, not string
-s, ok := i.(string)  // "", false
-x, ok := i.(int)     // 20, true
+s, ok := i.(string)  // OK-idiom: "", false
+x, ok := i.(int)     // OK-idiom: 20, true
 
 // var j is strongly typed inside the switch
 switch j := i(type) {
