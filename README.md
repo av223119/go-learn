@@ -14,6 +14,7 @@
 - [Pointers](#pointers)
 - [Methods](#methods)
 - [Interfaces](#interfaces)
+- [Errors](#errors)
 
 # Basic types
 
@@ -537,5 +538,37 @@ type HandlerFunc func(ResponseWriter, *Request)
 // Thus any handler-like function will satisfy Handler interface
 func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) {
     f(w, r)
+}
+```
+
+
+# Errors
+
+Errors are interfaces:
+```go
+type error interface {
+    Error() string
+}
+```
+
+`errors.New(s string)` produces new error. More convenient is `fmt.Errorf()`,
+it supports `%w` verb for wrapping errors
+```go
+f, err := os.Open("filename")
+if err != nil {
+    return fmt.Errorf("In myfunc: %w", err)
+}
+```
+errors.Unwrap allows to unwrap the nested error.
+
+For more structured errors, one needs custom type:
+```go
+type MyError struct {
+    code int
+    msg  string
+}
+
+func (me MyError) Error() string {
+    return me.msg
 }
 ```
