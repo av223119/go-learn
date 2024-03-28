@@ -310,6 +310,12 @@ switch size:=len(word); size {
     default: ..
 }
 
+// condition could be reversed
+switch today := time.Now().Weekday(); time.Thursday {
+    case today: ..
+    case today + 1: ..
+}
+
 // bare, can have arbitrary conditions
 switch size:=len(word); {
     case size < 5: ..
