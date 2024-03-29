@@ -578,3 +578,23 @@ func (me MyError) Error() string {
     return me.msg
 }
 ```
+
+`errors.Is` and `errors.As` check error instance and type
+
+`panic(anything)` generates a panic, like any other runtime panic (division by
+zero etc).
+
+`recover()` returns panic instance or nil. it should be put in `defer` clause,
+as only defer stack is executed in case of panic.
+
+```go
+// will print 1/i or panic message, but the execution will continue
+func rev (i int) {
+    defer func() {
+        if p := recover(); p != nil {
+            fmt.Println(p)
+        }
+    }()
+    fmt.Println(1/i)
+}
+```
